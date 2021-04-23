@@ -46,7 +46,13 @@ void MainWindow::on_load_clicked()
 {
     QString file = QFileDialog::getOpenFileName(this, tr("Open file"));
     if (is_normal_file(file)){
-    std::vector<std::vector<std::string>> csv = read_csv(file.toStdString());
+    FuncArgument fa = {
+                    .path = file.toStdString() //Приводим строку с путем к файлу от типа QString к стандартному типу строки
+                };
+    FuncReturningValue frv = entryPoint(readCsv, &fa);
+    std::vector<std::vector<std::string>> csv = frv.result;
+    //free(frv);
+    //std::vector<std::vector<std::string>> csv = read_csv(file);
     CsvItemModel->clear();
     CsvItemModel->setColumnCount(csv.at(0).size());
     headers.clear();
@@ -115,11 +121,22 @@ void MainWindow::on_calculate_clicked()
 
         std::vector<float> arr;
         for (int row = 0; row < csv_main_model->rowCount(); ++row){
-            if (is_normal_metric(csv_main_model->item(row, column_number)->text())){
+            FuncArgument fa = {
+                            .text = csv_main_model->item(row, column_number)->text()
+                        };
+            FuncReturningValue frv = entryPoint(isNormalMetric, &fa);
+            if (frv.isok){
             arr.push_back(csv_main_model->item(row, column_number)->text().toFloat());
             }
         }
-        calculate_metrics(arr, &minimum, &maximum, &medium);
+        FuncArgument fa = {
+                        .arr = arr,
+                        .minimum = &minimum,
+                        .maximum = &maximum,
+                        .medium = &medium
+                    };
+        FuncReturningValue frv = entryPoint(calculateMetrics, &fa);
+        //calculate_metrics(arr, &minimum, &maximum, &medium);
         QString final_text = "Минимум: "+ QString::number(minimum) +"\nМаксимум: "+ QString::number(maximum)
                 +"\nМедиана: "+ QString::number(medium);
         ui->metrics->setText(final_text);

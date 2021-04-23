@@ -1,5 +1,27 @@
 #include <bisness_logic.h>
 
+FuncReturningValue read_csv(std::string path);
+FuncReturningValue is_normal_metric(QString text);
+
+FuncReturningValue entryPoint(FuncType ft, FuncArgument* fa)
+{
+    FuncReturningValue result;
+    switch(ft)
+    {
+        case calculateMetrics:
+            calculate_metrics(fa->arr, fa->minimum, fa->maximum, fa->medium);
+            break;
+        case readCsv:
+            result = read_csv(fa->path);
+            break;
+        case isNormalMetric:
+            result = is_normal_metric(fa->text);
+        default:
+            break;
+    }
+    return result;
+}
+
 void calculate_metrics(std::vector<float> arr, float* minimum, float* maximum, float* medium){
     sort(arr.begin(), arr.end());
     *minimum = arr[0];
@@ -12,10 +34,13 @@ void calculate_metrics(std::vector<float> arr, float* minimum, float* maximum, f
     }
 }
 
-bool is_normal_metric(QString text){
+
+FuncReturningValue is_normal_metric(QString text){
+    FuncReturningValue frv;
     bool ok;
     text.toFloat(&ok);
-    return ok;
+    frv.isok = ok;
+    return frv;
 }
 
 std::vector<std::string> split_line(std::string line){
@@ -34,16 +59,17 @@ std::vector<std::string> split_line(std::string line){
     return result;
 }
 
-std::vector<std::vector<std::string>> read_csv(std::string path){
-    std::vector<std::vector<std::string>> result;
+FuncReturningValue read_csv(std::string path){
+    FuncReturningValue frv;
+    //std::vector<std::vector<std::string>> result;
     std::string line;
     std::ifstream myFile(path);
     if (!myFile.is_open()) throw std::runtime_error("Could not open file");
 
     while(getline(myFile, line)){
         std::vector<std::string> line_model = split_line(line);
-        result.push_back(line_model);
+        frv.result.push_back(line_model);
     }
-    return result;
+    return frv;
 }
 
